@@ -29,6 +29,10 @@
 }
 
 - (void)checkUser:(NSString *)user withPlistName:(NSString *)plistName {
+  /*
+   having user checks enables us to use more than one static dictionaries which means
+   more than one tweak, preferences, or developer can be using this at the same time
+  */
   if(self.currentUser != user) {
     self.tweakSettings = nil;
     self.plistPath = [NSString stringWithFormat:@"%@%@", tweakPreferencePath, plistName];

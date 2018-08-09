@@ -7,5 +7,5 @@ Maintainer: Orangebananaspy
 Author: Orangebananaspy
 Section: System
 Tag: role::developer
-Version: 1.0
-Installed-Size: 188
+Version: 0.0.1-15+debug
+Installed-Size: 312

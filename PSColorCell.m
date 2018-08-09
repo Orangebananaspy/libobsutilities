@@ -50,6 +50,7 @@
     self.pickerController.delegate = self;
     self.pickerController.providesPresentationContextTransitionStyle = YES;
     self.pickerController.definesPresentationContext = YES;
+    if(specifier.properties[@"isLighUI"]) self.pickerController.lightUI = [specifier.properties[@"isLighUI"] boolValue];
     self.pickerController.modalPresentationStyle = UIModalPresentationOverCurrentContext;
     
     self.color = [OBSUtilities colorFromHexString:defaultColorHex];

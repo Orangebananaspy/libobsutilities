@@ -8,7 +8,7 @@ THEOS_BUILD_DIR = Packages
 
 PACKAGE_VERSION = 1.0
 
-DEBUG=0
+DEBUG = 0
 
 include $(THEOS)/makefiles/common.mk
 
