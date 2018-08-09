@@ -88,7 +88,7 @@ Preferences Plist Specfier Examples
 ```
 The UI color of the picker is out of developers hands if Eclipse is installed and enabled for Preferences.
 ### License
-The MIT License (MIT)
+MIT License
 
 Copyright (c) 2018 Orangebananaspy
 
@@ -109,3 +109,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
