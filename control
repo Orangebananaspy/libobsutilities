@@ -3,7 +3,7 @@ Name: libOBSUtilities
 Depends: 
 Version: 0.0.1
 Architecture: iphoneos-arm
-Description: An awesome library of some sort!!
+Description: This library contains the basic utilities needed to build many tweaks
 Maintainer: Orangebananaspy
 Author: Orangebananaspy
 Section: System
