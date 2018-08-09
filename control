@@ -1,0 +1,10 @@
+Package: com.orangebananaspy.libobsutilities
+Name: libOBSUtilities
+Depends: 
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: An awesome library of some sort!!
+Maintainer: Orangebananaspy
+Author: Orangebananaspy
+Section: System
+Tag: role::developer
