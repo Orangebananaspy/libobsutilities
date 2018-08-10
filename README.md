@@ -93,4 +93,4 @@ Preview
 
 License
 ----------
-Please see __LICENSE__(../blob/master/LICENSE) file attached with this repo.
+Please see __LICENSE__(./LICENSE) file attached with this repo.
