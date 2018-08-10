@@ -1,10 +1,13 @@
 Package: com.orangebananaspy.libobsutilities
 Name: libOBSUtilities
-Depends: 
-Version: 0.0.1
+Depends: firmware (>= 7.0)
+Version: 1.0
 Architecture: iphoneos-arm
 Description: This library contains the basic utilities needed to build many tweaks
-Maintainer: Orangebananaspy
-Author: Orangebananaspy
-Section: System
-Tag: role::developer
+Maintainer: Orangebananaspy <admin@orangebananaspy.com>
+Author: Orangebananaspy <admin@orangebananaspy.com>
+Section: Development
+Tag: role::developer, compatible::ios7, compatible::ios8, compatible::ios9, compatible::ios10, compatible::ios11
+Depiction: http://repo.orangebananaspy.com/depiction.php?id=libobsutilities
+Homepage: http://repo.orangebananaspy.com/depiction.php?id= libobsutilities
+dev: orangebananaspy
