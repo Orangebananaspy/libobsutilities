@@ -90,4 +90,4 @@ The UI color of the picker is out of developers hands if Eclipse is installed an
 
 License
 ----------
-Please see LICENSE file attached with this repo.
+Please see __LICENSE__ file attached with this repo.
