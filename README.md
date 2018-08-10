@@ -90,6 +90,7 @@ The UI color of the picker is out of developers hands if Eclipse is installed an
 
 Preview
 -------
+<img src="Preview/darkUI_ColorPicker.JPG" alt="DarkUI" width="160px"/><img src="Preview/lightUI_ColorPicker.JPG" alt="LightUI" width="160px"/><img src="Preview/eclipseCompatibility_ColorPicker.JPG" alt="Eclipse Compatible" width="160px"/><img src="Preview/PSColorCell.JPG" alt="PSColorCell" width="160px"/><img src="Preview/PSCustomSwitchCell.JPG" alt="PSCustomSwitchCell" width="160px"/>
 
 License
 ----------
