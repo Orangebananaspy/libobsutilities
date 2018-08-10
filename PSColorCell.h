@@ -6,8 +6,8 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <Preferences/PSSpecifier.h>
-#import <Preferences/PSTableCell.h>
+#import "PSSpecifier.h"
+#import "PSTableCell.h"
 #import "ColorPicker.h"
 #import "PSTweakSettings.h"
 
