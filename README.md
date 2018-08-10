@@ -2,7 +2,7 @@ OBSUtilities
 =========
 This library contains the basic utilities needed to build many tweaks. Such as:
 1. Light weight color picker
-2. Basic color manipulation tools (Hex conversions, check if color is bright)
+2. Basic color manipulation tools
   * Hex conversions
   * If color is bright
 3. Basic image tools
@@ -14,7 +14,7 @@ This library contains the basic utilities needed to build many tweaks. Such as:
   * PSColorCell
   * PSCustomSwitchCell
 5. Tweak settings
-  * Easy to create settings by simply defining the name
+  * Easy to create settings by simply defining the file name
   * Easy to get values
   * Easy to save and update values
   
