@@ -13,6 +13,10 @@ This library contains the basic utilities needed to build many tweaks. Such as:
 4. Useful Preference Loader Cells
   * PSColorCell
   * PSCustomSwitchCell
+5. Tweak settings
+  * Easy to create settings by simply defining the name
+  * Easy to get values
+  * Easy to save and update values
   
 How to Implement:
 ----------------------
@@ -24,7 +28,7 @@ How to Implement:
   * Basically add it as a library where ever you plan to use this library.
 6. Download __OBSUtilites__ folder from this repo and place it in __$THEOS/include__ folder
 
-Preferences Plist Specfier Examples
+Usages
 ------------------------------------------
 ### PSCustomSwitchCell
 ```xml
@@ -88,6 +92,24 @@ Preferences Plist Specfier Examples
 ```
 The UI color of the picker is out of developers hands if Eclipse is installed and enabled for Preferences.
 
+### PSTweakSettings
+```objective-c
+/*
+ it is a singleton so it will only ever need to be called once to load your settings between
+ preferences and your tweak unless another developer requests their settings to be loaded in between your calls
+ */
+PSTweakSettings *settings = [PSTweakSettings instanceWithName:@"com.orangebananaspy.example.plist" andUser:@"Orangebananaspy"];
+
+/*
+ get values using [settings getSettingsForKey:key_id]
+ */
+bool isTweakEnabled = [[settings getSettingsForKey:@"TweakEnabled"] boolValue];
+
+/*
+ update and save the value for the given key using [settings updateSettingsForKey:key_id andValue:value]
+ */
+[settings updateSettingsForKey:@"TweakEnabled" andValue:[NSNumber numberWithBool:status]];
+```
 Preview
 -------
 <img src="Preview/darkUI_ColorPicker.JPG" alt="DarkUI" width="160px"/><img src="Preview/lightUI_ColorPicker.JPG" alt="LightUI" width="160px"/><img src="Preview/eclipseCompatibility_ColorPicker.JPG" alt="Eclipse Compatible" width="160px"/><img src="Preview/PSColorCell.JPG" alt="PSColorCell" width="160px"/><img src="Preview/PSCustomSwitchCell.JPG" alt="PSCustomSwitchCell" width="160px"/>
