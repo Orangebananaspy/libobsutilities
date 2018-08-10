@@ -87,7 +87,9 @@ Preferences Plist Specfier Examples
 </dict>
 ```
 The UI color of the picker is out of developers hands if Eclipse is installed and enabled for Preferences.
-### License
+
+License
+----------
 MIT License
 
 Copyright (c) 2018 Orangebananaspy
