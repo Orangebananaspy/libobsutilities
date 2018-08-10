@@ -93,4 +93,6 @@ Preview
 
 License
 ----------
-Please see __LICENSE__(libobsutilities/blob/master/LICENSE) file attached with this repo.
+Please see __[LICENSE]__ file attached with this repo.
+
+[LICENSE]: LICENSE
