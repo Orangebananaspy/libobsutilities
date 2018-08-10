@@ -88,6 +88,9 @@ Preferences Plist Specfier Examples
 ```
 The UI color of the picker is out of developers hands if Eclipse is installed and enabled for Preferences.
 
+Preview
+-------
+
 License
 ----------
-Please see __LICENSE__ file attached with this repo.
+Please see __LICENSE__(../blob/master/LICENSE) file attached with this repo.
