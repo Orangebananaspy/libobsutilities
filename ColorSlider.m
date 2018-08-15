@@ -5,7 +5,7 @@
 //  Copyright © 2018 Orangebananaspy. All rights reserved.
 //
 
-#import "ColorSlider.h"
+#import "OBSUtilities/ColorSlider.h"
 
 @interface ColorSlider()
 @property (nonatomic, strong) UISlider *slider;

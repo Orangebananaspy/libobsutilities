@@ -1,2 +1,4 @@
 .DS_Store
 ._*
+.theos
+*debug_iphoneos-arm.deb

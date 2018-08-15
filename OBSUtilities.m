@@ -5,7 +5,7 @@
 //  Copyright © 2018 Orangebananaspy. All rights reserved.
 //
 
-#import "OBSUtilities.h"
+#import "OBSUtilities/OBSUtilities.h"
 @import Accelerate;
 #import <float.h>
 
