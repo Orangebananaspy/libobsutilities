@@ -9,6 +9,13 @@
 @import Accelerate;
 #import <float.h>
 
+#define Mask8(x) ((x) & 0xFF)
+#define R(x) (Mask8(x))
+#define G(x) (Mask8(x >> 8))
+#define B(x) (Mask8(x >> 16))
+#define A(x) (Mask8(x >> 24))
+#define C(x) (x * 255.0)
+
 UInt32 intFromString(NSString *string) {
   UInt32 hex = 0;
   NSScanner *scanner = [NSScanner scannerWithString:string];
@@ -130,5 +137,115 @@ UInt32 intFromString(NSString *string) {
   UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
   UIGraphicsEndImageContext();
   return newImage;
+}
+
++ (UIColor *)inverseColor:(UIColor *)color {
+  CGFloat r,g,b,a;
+  [color getRed:&r green:&g blue:&b alpha:&a];
+  return [UIColor colorWithRed:1.-r green:1.-g blue:1.-b alpha:a];
+}
+
+// original can be found at https://stackoverflow.com/questions/13694618/objective-c-getting-least-used-and-most-used-color-in-a-image
+// it has been modified to be more accurate, and ignore transparent colors
++ (NSArray *)colorsFromImage:(UIImage *)image {
+  const float filterRange = 60;
+  
+  CGImageRef inputCGImage = [image CGImage];
+  NSUInteger width = CGImageGetWidth(inputCGImage);
+  NSUInteger height = CGImageGetHeight(inputCGImage);
+  
+  NSUInteger bytesPerPixel = 4;
+  NSUInteger bytesPerRow = bytesPerPixel * width;
+  NSUInteger bitsPerComponent = 8;
+  
+  UInt32 * pixels;
+  pixels = (UInt32 *) calloc(height * width, sizeof(UInt32));
+  
+  // get the raw data
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  CGContextRef context = CGBitmapContextCreate(pixels, width, height, bitsPerComponent, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+  CGContextDrawImage(context, CGRectMake(0, 0, width, height), inputCGImage);
+  CGColorSpaceRelease(colorSpace);
+  CGContextRelease(context);
+  
+  // store non-transparent or non-alpha affected colors into an array
+  NSMutableArray *colors = [NSMutableArray new];
+  UInt32 * currentPixel = pixels;
+  for (NSUInteger j = 0; j < height; j++) {
+    for (NSUInteger i = 0; i < width; i++) {
+      UInt32 color = *currentPixel;
+      
+      if(A(color) == 255) {
+        UIColor *colorObject = [UIColor colorWithRed:(R(color) / 255.0f) green:(G(color) / 255.0f) blue:(B(color) / 255.0f) alpha:(A(color) / 255.0f)];
+        [colors addObject:colorObject];
+      }
+      
+      currentPixel++;
+    }
+  }
+  free(pixels);
+  
+  // count occurence of colors and sort from high to low
+  NSCountedSet *colorsCountedSet = [[NSCountedSet alloc] initWithArray:colors];
+  NSArray *distinctColors = [[colorsCountedSet allObjects] sortedArrayUsingFunction:countedSort context:(void *)colorsCountedSet];
+  
+  // filter colors that are similar (within range of that color by the defined amount)
+  NSMutableArray *filteredColors = [NSMutableArray new];
+  for (UIColor *color in distinctColors) {
+    bool accepted = true;
+    for (UIColor *filteredColor in filteredColors) {
+      CGFloat fRed = 0, fGreen = 0, fBlue = 0, fAlpha = 0;
+      [filteredColor getRed:&fRed green:&fGreen blue:&fBlue alpha:&fAlpha];
+      int32_t fr = C(fRed), fg = C(fGreen), fb = C(fBlue);
+      
+      CGFloat cRed = 0, cGreen = 0, cBlue = 0, cAlpha = 0;
+      [color getRed:&cRed green:&cGreen blue:&cBlue alpha:&cAlpha];
+      int32_t cr = C(cRed), cg = C(cGreen), cb = C(cBlue);
+      
+      if(abs(cr - fr) <= filterRange && abs(cg - fg) <= filterRange && abs(cb - fb) <= filterRange) {
+        accepted = false;
+        break;
+      }
+    }
+    
+    if(accepted) [filteredColors addObject:color];
+  }
+
+  return [filteredColors copy];
+}
+
+// helps sort colors in -[OBSUtilities coloursFromImage:]
+NSInteger countedSort(id obj1, id obj2, void *context) {
+  NSCountedSet *countedSet = (__bridge NSCountedSet *) context;
+  NSUInteger obj1Count = [countedSet countForObject:obj1];
+  NSUInteger obj2Count = [countedSet countForObject:obj2];
+  
+  if (obj1Count > obj2Count) return NSOrderedAscending;
+  else if (obj1Count < obj2Count) return NSOrderedDescending;
+  return NSOrderedSame;
+}
+
++ (BOOL)isColor:(UIColor *)aColor similarToColor:(UIColor *)bColor tolerance:(float)tolerance {
+  CGFloat hue, saturation, brightness, alpha;
+  [aColor getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha];
+  
+  CGFloat ahue, asaturation, abrightness, aalpha;
+  [bColor getHue:&ahue saturation:&asaturation brightness:&abrightness alpha:&aalpha];
+  
+  if (fabs(brightness - abrightness) < tolerance) {
+    if (brightness == 0) {
+      return YES;
+    }
+    if (fabs(saturation - asaturation) < tolerance) {
+      if (saturation == 0) {
+        return YES;
+      }
+      if (fabs(hue - ahue) < tolerance * 360) {
+        return YES;
+      }
+    }
+  }
+  
+  return NO;
 }
 @end

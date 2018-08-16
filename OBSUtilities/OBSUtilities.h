@@ -50,6 +50,22 @@
 + (BOOL)isColorBright:(UIColor *)color;
 
 /*
+ Inverses the given color. It is useful mostly to inverse a text color so it can adapt to various
+ colored background.
+ */
++ (UIColor *)inverseColor:(UIColor *)color;
+
+/*
+ It returns the colors of the images from most used to least.
+ */
++ (NSArray *)colorsFromImage:(UIImage *)image;
+
+/*
+ Check if the two given colors are similar by the given tolerance.
+ */
++ (BOOL)isColor:(UIColor *)aColor similarToColor:(UIColor *)bColor tolerance:(float)tolerance;
+
+/*
  Returns a 1x1 pixel UIImage with the given color.
  */
 + (UIImage *)imagePixelFromColor:(UIColor *)color;
