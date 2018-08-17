@@ -19,8 +19,6 @@ typedef enum Edge : NSUInteger {
 } Edge;
 
 @interface OBSUtilities : NSObject
-+ (NSDictionary *)colorsFromImage:(UIImage *)image withEdge:(Edge)edge;
-
 /*
  Gets the average color from the given image. It draws the entire image in a 1x1 pixel with
  medium interpolation which is forcing the colors to merge and the result is the average color of the
@@ -65,9 +63,14 @@ typedef enum Edge : NSUInteger {
 + (UIColor *)inverseColor:(UIColor *)color;
 
 /*
- It returns the colors of the images from most used to least.
+ It returns a dictionary with Background, Primary, or Secondary colors for the given image.
+ Format of dicionary {@"Background" : UIColor, @"Primary" : UIColor, @"Secondary" : UIColor}
+ 
+ Please note that the edge will be the background color, it simply determines the key side
+ of the image you actually care about and very useful for instances where if a badge is placed
+ on the top side of the image, then you care more about the top edge
  */
-+ (NSArray *)colorsFromImage:(UIImage *)image;
++ (NSDictionary *)colorsFromImage:(UIImage *)image withEdge:(Edge)edge;
 
 /*
  Check if the two given colors are similar by the given tolerance.

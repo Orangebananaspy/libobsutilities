@@ -160,10 +160,25 @@ struct Pixel {
   unsigned char r, g, b, a;
 };
 
+static NSMutableDictionary *cacheImageInfo = nil;
+
+// original can be found at https://stackoverflow.com/questions/13694618/objective-c-getting-least-used-and-most-used-color-in-a-image
+// it has been modified to be more accurate, ignore transparent colors, and exclude uneeded pixels ahead of time
+// also included a cache system (useful for placing this in functions where its called multiple times)
 + (NSDictionary *)colorsFromImage:(UIImage *)image withEdge:(Edge)edge {
+  if(!cacheImageInfo) cacheImageInfo = [NSMutableDictionary new];
+  NSData *imgCache = UIImagePNGRepresentation([OBSUtilities newScale:CGSizeMake(10, 10) forImage:image]);
+  
+  // if the value for image exists then simply return it
+  id valueForImage = nil;
+  if((valueForImage = [cacheImageInfo objectForKey:imgCache])) {
+    imgCache = nil;
+    return valueForImage;
+  }
+  
   CGImageRef inputCGImage = [image CGImage];
-  NSUInteger width = CGImageGetWidth(inputCGImage)/2;
-  NSUInteger height = CGImageGetHeight(inputCGImage)/2;
+  NSUInteger width = CGImageGetWidth(inputCGImage);
+  NSUInteger height = CGImageGetHeight(inputCGImage);
   
   NSUInteger bytesPerPixel = 4;
   NSUInteger bytesPerRow = bytesPerPixel * width;
@@ -219,6 +234,7 @@ struct Pixel {
   
   // count occurence of colors and replace colors with distinct array of colors
   NSCountedSet *colorsCountedSet = [[NSCountedSet alloc] initWithArray:colors];
+  colors = nil;
   colors = [[[colorsCountedSet allObjects] sortedArrayUsingFunction:countedSort context:(void *)colorsCountedSet] mutableCopy];
   
   // get average color of the edge
@@ -232,10 +248,10 @@ struct Pixel {
   const CGFloat filterRange = 100;
   NSMutableArray *filteredColors = [NSMutableArray new];
   for (PixelColor *color in colors) {
-    bool accepted = true;
+    bool accepted = TRUE;
     for (PixelColor *filteredColor in filteredColors) {
       if(diff(color.r, filteredColor.r) <= filterRange && diff(color.g, filteredColor.g) <= filterRange && diff(color.b, filteredColor.b) <= filterRange) {
-        accepted = false;
+        accepted = FALSE;
         break;
       }
     }
@@ -247,7 +263,7 @@ struct Pixel {
   
   NSMutableArray *nearByColors = [NSMutableArray new];
   
-  CGFloat minContrast = 2.8f;
+  CGFloat minContrast = 3.8f;
   // get all the near by colors
   while (nearByColors.count < 3) { // at least 3 {primary, secondary}
     for (PixelColor *color in filteredColors) {
@@ -267,6 +283,7 @@ struct Pixel {
   
   // sort colors by its frequency
   NSArray *sortedColors = [[NSArray arrayWithArray:nearByColors] sortedArrayUsingDescriptors:@[[[NSSortDescriptor alloc] initWithKey:@"distance" ascending:TRUE]]];
+
   PixelColor *primaryColor = sortedColors[0];
   
   // find the index of the most contrasting color
@@ -283,15 +300,16 @@ struct Pixel {
   
   PixelColor *secondaryColor = sortedColors[index];
   
-  printColor(edgeColor, "BackgroundColor");
-  printColor(primaryColor, "PrimaryColor");
-  printColor(secondaryColor, "SecondaryColor");
+  colors = nil;
+  colorsCountedSet = nil;
+  filteredColors = nil;
+  nearByColors = nil;
+  sortedColors = nil;
   
-  return @{ @"Background": [edgeColor color], @"Primary": [primaryColor color], @"Secondary": [secondaryColor color] };
-}
-
-void printColor(PixelColor *c, char *name) {
-  printf("%s - {%lu, %lu, %lu}\n", name, (unsigned long)c.r, (unsigned long)c.g, (unsigned long)c.b);
+  NSDictionary *imageInfo = @{ @"Background": [edgeColor color], @"Primary": [primaryColor color], @"Secondary": [secondaryColor color] };
+  // store in cache if ever called again its super quick
+  [cacheImageInfo setObject:imageInfo forKey:imgCache];
+  return imageInfo;
 }
 
 NSUInteger diff(NSUInteger a, NSUInteger b) {
@@ -312,94 +330,6 @@ NSUInteger diff(NSUInteger a, NSUInteger b) {
 
 + (NSUInteger)colourDistance:(PixelColor *)a andB:(PixelColor *)b {
   return (a.r-b.r) + (a.g-b.g) + (a.b-b.b);
-}
-
-// original can be found at https://stackoverflow.com/questions/13694618/objective-c-getting-least-used-and-most-used-color-in-a-image
-// it has been modified to be more accurate, and ignore transparent colors
-+ (NSArray *)colorsFromImage:(UIImage *)image {
-  const float filterRange = 60;
-
-  CGImageRef inputCGImage = [image CGImage];
-  NSUInteger width = CGImageGetWidth(inputCGImage);
-  NSUInteger height = CGImageGetHeight(inputCGImage);
-
-  NSUInteger bytesPerPixel = 4;
-  NSUInteger bytesPerRow = bytesPerPixel * width;
-  NSUInteger bitsPerComponent = 8;
-
-  UInt32 *pixels;
-  pixels = (UInt32 *) calloc(height * width, sizeof(UInt32));
-  
-  // get the raw data
-  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-  CGContextRef context = CGBitmapContextCreate(pixels, width, height, bitsPerComponent, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-  CGColorSpaceRelease(colorSpace);
-  CGContextDrawImage(context, CGRectMake(0, 0, width, height), inputCGImage);
-  CGContextRelease(context);
-
-  // store non-transparent or non-alpha affected colors into an array
-  NSMutableArray *colors = [NSMutableArray new];
-  UInt32 *currentPixel = pixels;
-  for (NSUInteger j = 0; j < height; j++) {
-    for (NSUInteger i = 0; i < width; i++) {
-      UInt32 color = *currentPixel;
-
-      if(A(color) == 255) {
-        UIColor *colorObject = [UIColor colorWithRed:(R(color) / 255.0f) green:(G(color) / 255.0f) blue:(B(color) / 255.0f) alpha:(A(color) / 255.0f)];
-        [colors addObject:colorObject];
-      }
-
-      currentPixel++;
-    }
-  }
-  free(pixels);
-
-  // count occurence of colors and sort from high to low
-  NSCountedSet *colorsCountedSet = [[NSCountedSet alloc] initWithArray:colors];
-  NSArray *distinctColors = [[colorsCountedSet allObjects] sortedArrayUsingFunction:countedSort context:(void *)colorsCountedSet];
-  
-  // filter colors that are similar (within range of that color by the defined amount)
-  NSMutableArray *filteredColors = [NSMutableArray new];
-//  bool firstSelected = false;
-//  UIColor *averageColor = [OBSUtilities averageColorForImage:image];
-  for (UIColor *color in distinctColors) {
-    bool accepted = true;
-    for (UIColor *filteredColor in filteredColors) {
-      CGFloat fRed = 0, fGreen = 0, fBlue = 0, fAlpha = 0;
-      [filteredColor getRed:&fRed green:&fGreen blue:&fBlue alpha:&fAlpha];
-      int32_t fr = C(fRed), fg = C(fGreen), fb = C(fBlue);
-
-      CGFloat cRed = 0, cGreen = 0, cBlue = 0, cAlpha = 0;
-      [color getRed:&cRed green:&cGreen blue:&cBlue alpha:&cAlpha];
-      int32_t cr = C(cRed), cg = C(cGreen), cb = C(cBlue);
-
-      if(abs(cr - fr) <= filterRange && abs(cg - fg) <= filterRange && abs(cb - fb) <= filterRange) {
-        accepted = false;
-        break;
-      }
-    }
-    
-    if(accepted) {
-      [filteredColors addObject:color];
-    }
-  }
-  
-  UIColor *white = [UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:1.0f];
-  NSUInteger whiteCount = [colorsCountedSet countForObject:white];
-  NSUInteger removeWhiteAmount = whiteCount / 1.02;
-  NSLog(@"*** OOBBSS *** WhiteCount = {%lu}, Removing = {%lu}", (unsigned long)whiteCount, (unsigned long)removeWhiteAmount);
-  for(int i = 0; i <= removeWhiteAmount; i++) {
-    [colorsCountedSet removeObject:white];
-  }
-  
-  [filteredColors sortUsingFunction:countedSort context:(void *)colorsCountedSet];
-  
-  for(UIColor *c in filteredColors) {
-    NSLog(@"*** OOBBSS *** Color = {%@}, Count = {%lu}", c, (unsigned long)[colorsCountedSet countForObject:c]);
-  }
-  NSLog(@"*** OOBBSS ***");
-  
-  return [filteredColors copy];
 }
 
 // helps sort colors in -[OBSUtilities coloursFromImage:]
