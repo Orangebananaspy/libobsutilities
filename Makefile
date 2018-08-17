@@ -19,6 +19,6 @@ libOBSUtilities_FRAMEWORKS = UIKit Foundation CoreGraphics Accelerate
 libOBSUtilities_PRIVATE_FRAMEWORKS = Preferences
 
 after-install::
-	install.exec "killall -9 Preferences"
+	install.exec "killall -9 SpringBoard"
 
 include $(THEOS_MAKE_PATH)/library.mk

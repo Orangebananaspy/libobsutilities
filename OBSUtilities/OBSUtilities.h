@@ -11,7 +11,16 @@
 #ifndef OBSUtilities_h
 #define OBSUtilities_h
 
+typedef enum Edge : NSUInteger {
+  kTop,
+  kLeft,
+  kRight,
+  kBottom
+} Edge;
+
 @interface OBSUtilities : NSObject
++ (NSDictionary *)colorsFromImage:(UIImage *)image withEdge:(Edge)edge;
+
 /*
  Gets the average color from the given image. It draws the entire image in a 1x1 pixel with
  medium interpolation which is forcing the colors to merge and the result is the average color of the
