@@ -5,23 +5,18 @@
 //  Copyright © 2018 Orangebananaspy. All rights reserved.
 //
 
-#import "ColorPicker.h"
-#import "ColorSlider.h"
-#import "OBSUtilities.h"
+#import "OBSUtilities/ColorPicker.h"
+#import "OBSUtilities/ColorSlider.h"
+#import "OBSUtilities/OBSUtilities.h"
+#import "OBSUtilities/OBSModalView.h"
 
-@interface ColorPicker ()
-@property (nonatomic) UIColor *primaryColor;
-@property (nonatomic) UIColor *secondaryColor;
-@property (nonatomic) UIColor *primaryTextColor;
-@property (nonatomic) UIColor *secondaryTextColor;
+@interface ColorPicker () <OBSModalDelegate>
+@property (nonatomic, strong) OBSModalView *modal;
+
 @property (nonatomic) CGRect mainRect;
 @property (nonatomic) CGFloat mainCornerRadius;
-@property (nonatomic, strong) UIView *shadowView;
-@property (nonatomic, strong) UIView *contentView;
-@property (nonatomic, strong) UIButton *closeButton;
 @property (nonatomic, strong) UIScrollView *scrollView;
 @property (nonatomic, strong) UIStackView *scrollViewStack;
-@property (nonatomic, strong) UIButton *selectButton;
 @property (nonatomic, strong) UIImageView *previewColor;
 @property (nonatomic, strong) UITextField *hexTextField;
 @property (nonatomic, strong) UILabel *canEditMessage;
@@ -30,7 +25,6 @@
 @property (nonatomic, strong) ColorSlider *greenSlider;
 @property (nonatomic, strong) ColorSlider *blueSlider;
 @property (nonatomic, strong) ColorSlider *alphaSlider;
-@property (nonatomic) BOOL isEclipseEnabled;
 @end
 
 @implementation ColorPicker
@@ -46,7 +40,6 @@
   [super viewDidLoad];
   
   [self configColorPicker];
-  [self setupShadowView];
   [self setupContentView];
   [self setupContentSubviews];
   [self addViewsInOrder];
@@ -70,73 +63,23 @@
   // make background clear so we can see the viewcontroller behind this modal view
   self.view.backgroundColor = [UIColor clearColor];
   
-  self.isEclipseEnabled = false;
-  NSFileManager *fileManager = [NSFileManager defaultManager];
-  if ([fileManager fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/Eclipse.dylib"]) {
-    if ([fileManager fileExistsAtPath:@"/var/mobile/Library/Preferences/com.gmoran.eclipse.plist"]) {
-      NSDictionary *eclipseSettings = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.gmoran.eclipse.plist"];
-      if(eclipseSettings[@"enabled"] && [eclipseSettings[@"enabled"] boolValue]) {
-        self.isEclipseEnabled = (eclipseSettings[@"EnabledApps-com.apple.Preferences"] && [eclipseSettings[@"EnabledApps-com.apple.Preferences"] boolValue]);
-      }
-    }
-  }
-  
-  // setup default values for the picker
-  if(self.isEclipseEnabled) {
-    self.primaryColor = [OBSUtilities colorFromHexString:@"212121"];
-    self.secondaryColor = [OBSUtilities colorFromHexString:@"616161"];
-    self.primaryTextColor = [OBSUtilities colorFromHexString:@"616161"];
-    self.secondaryTextColor = [OBSUtilities colorFromHexString:@"212121"];
-  } else {
-    self.primaryColor = [OBSUtilities colorFromHexString:@"ECECEC"];
-    self.secondaryColor = [OBSUtilities colorFromHexString:@"22313F"];
-    self.primaryTextColor = [OBSUtilities colorFromHexString:@"22313F"];
-    self.secondaryTextColor = [OBSUtilities colorFromHexString:@"ECECEC"];
-  }
-  
   CGFloat height = 445.0f;
   self.mainRect = CGRectMake(5.0f, CGRectGetMidY(self.view.frame) - (height / 2.0f), self.view.frame.size.width - 10.0f, height);
   self.mainCornerRadius = 40.0f;
 }
 
 #pragma mark SETUP FUNCTIONS
-- (void)setupShadowView {
-  self.shadowView = [[UIView alloc] initWithFrame:self.mainRect];
-  self.shadowView.backgroundColor = [UIColor clearColor];
-  self.shadowView.clipsToBounds = NO;
-  self.shadowView.layer.shadowOffset = CGSizeMake(0.0f, 0.0f);
-  self.shadowView.layer.shadowRadius = 10.0f;
-  self.shadowView.layer.shadowOpacity = 0.4f;
-  self.shadowView.layer.masksToBounds = NO;
-  self.shadowView.layer.shadowPath = [UIBezierPath bezierPathWithRoundedRect:self.shadowView.bounds cornerRadius:self.mainCornerRadius].CGPath;
-  self.shadowView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-}
-
 - (void)setupContentView {
-  self.contentView = [[UIView alloc] initWithFrame:self.mainRect];
-  self.contentView.clipsToBounds = YES;
-  self.contentView.layer.masksToBounds = YES;
-  self.contentView.layer.cornerRadius = self.mainCornerRadius;
-//  UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:self.contentView.bounds byRoundingCorners:UIRectCornerTopLeft| UIRectCornerTopRight cornerRadii:CGSizeMake(self.mainCornerRadius, self.mainCornerRadius)];
-//  CAShapeLayer *maskLayer = [CAShapeLayer layer];
-//  maskLayer.frame = self.contentView.bounds;
-//  maskLayer.path = maskPath.CGPath;
-//  self.contentView.layer.mask = maskLayer;
-  self.contentView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  OBSModalOptions *options = [[OBSModalOptions alloc] initWithModalFrame:self.mainRect cornerRadius:self.mainCornerRadius delegate:self isLightUI:self.lightUI selectTitleForButton:@"SELECT"];
+  self.modal = [[OBSModalView alloc] initWithFrame:self.view.frame modalOptions:options];
 }
 
 - (void)setupContentSubviews {
-  self.closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-  [self.closeButton addTarget:self action:@selector(closeButtonPressed) forControlEvents:UIControlEventTouchUpInside];
-  [self.closeButton setTitle:@"X" forState:UIControlStateNormal];
-  self.closeButton.layer.masksToBounds = YES;
-  self.closeButton.layer.cornerRadius = 20.0f;
-  self.closeButton.titleLabel.font = [UIFont fontWithName:[NSString stringWithFormat:@"%@-Bold", self.closeButton.titleLabel.font.fontName] size:20.0f];
-  
-  self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectZero];
+  self.scrollView = [[UIScrollView alloc] initWithFrame:self.modal.contentView.frame];
   self.scrollView.layer.masksToBounds = YES;
   self.scrollView.layer.cornerRadius = self.mainCornerRadius;
   self.scrollView.layer.borderWidth = 1.5f;
+  self.scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   
   self.scrollViewStack = [[UIStackView alloc] init];
   self.scrollViewStack.axis = UILayoutConstraintAxisVertical;
@@ -146,13 +89,6 @@
   //  UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
   self.scrollViewStack.layoutMargins = UIEdgeInsetsMake(25.0f, 0, 0, 0);
   [self.scrollViewStack setLayoutMarginsRelativeArrangement:YES];
-  
-  self.selectButton = [UIButton buttonWithType:UIButtonTypeCustom];
-  [self.selectButton addTarget:self action:@selector(selectButtonPressed) forControlEvents:UIControlEventTouchUpInside];
-  [self.selectButton setTitle:@"SELECT" forState:UIControlStateNormal];
-  self.selectButton.titleLabel.font = [UIFont fontWithName:[NSString stringWithFormat:@"%@-Bold", self.selectButton.titleLabel.font.fontName] size:14.0f];
-  self.selectButton.layer.masksToBounds = YES;
-  self.selectButton.layer.cornerRadius =  20.5f;
   
   self.previewColor = [[UIImageView alloc] init];
   self.previewColor.clipsToBounds = YES;
@@ -203,31 +139,13 @@
 }
 
 - (void)setupConstraints {
-  self.scrollView.translatesAutoresizingMaskIntoConstraints = NO;
-  [self.scrollView.heightAnchor constraintEqualToConstant:300.0f].active = YES;
-  [self.scrollView.widthAnchor constraintEqualToConstant:self.mainRect.size.width - (15.0f * 2.0f)].active = YES;
-  [self.scrollView.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:15.0f].active = YES;
-  [self.scrollView.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor].active = YES;
-  
-  self.closeButton.translatesAutoresizingMaskIntoConstraints = NO;
-  [self.closeButton.heightAnchor constraintEqualToConstant:40.0f].active = YES;
-  [self.closeButton.widthAnchor constraintEqualToConstant:40.0f].active = YES;
-  [self.closeButton.leftAnchor constraintEqualToAnchor:self.contentView.leftAnchor constant:15.0f].active = YES;
-  [self.closeButton.bottomAnchor constraintEqualToAnchor:self.scrollView.topAnchor constant:-15.0f].active = YES;
-  
   self.scrollViewStack.translatesAutoresizingMaskIntoConstraints = NO;
   [self.scrollViewStack.topAnchor constraintEqualToAnchor:(self.scrollView.topAnchor)].active = YES;
   [self.scrollViewStack.leadingAnchor constraintEqualToAnchor:(self.scrollView.leadingAnchor)].active = YES;
   [self.scrollViewStack.trailingAnchor constraintEqualToAnchor:(self.scrollView.trailingAnchor)].active = YES;
   [self.scrollViewStack.bottomAnchor constraintEqualToAnchor:(self.scrollView.bottomAnchor)].active = YES;
   [self.scrollViewStack.centerXAnchor constraintEqualToAnchor:self.scrollView.centerXAnchor].active = YES;
-  
-  self.selectButton.translatesAutoresizingMaskIntoConstraints = NO;
-  [self.selectButton.heightAnchor constraintEqualToConstant:40.0f].active = YES;
-  [self.selectButton.widthAnchor constraintEqualToConstant:70.0f].active = YES;
-  [self.selectButton.centerXAnchor constraintEqualToAnchor:self.contentView.centerXAnchor constant:0.0f].active = YES;
-  [self.selectButton.topAnchor constraintEqualToAnchor:self.scrollView.bottomAnchor constant:15.0f].active = YES;
-  
+
   [self.previewColor.heightAnchor constraintEqualToConstant:55.0f].active = YES;
   [self.previewColor.widthAnchor constraintEqualToConstant:120.0f].active = YES;
   
@@ -249,12 +167,9 @@
 
 #pragma mark ADD SUBVIEWS
 - (void)addViewsInOrder {
-  [self.view insertSubview:self.shadowView atIndex:0];
-  [self.view insertSubview:self.contentView atIndex:1];
-  [self.contentView addSubview:self.scrollView];
-  [self.contentView addSubview:self.closeButton];
+  [self.view insertSubview:self.modal atIndex:0];
+  [self.modal.contentView addSubview:self.scrollView];
   [self.scrollView addSubview:self.scrollViewStack];
-  [self.contentView addSubview:self.selectButton];
   [self.scrollViewStack addArrangedSubview:self.previewColor];
   [self.scrollViewStack addArrangedSubview:self.hexTextField];
   [self.scrollViewStack addArrangedSubview:self.redSlider];
@@ -265,69 +180,36 @@
 
 #pragma mark APPLY COLOR TO PICKER UI
 - (void)applyColor {
-  if(self.isEclipseEnabled) {
-    self.shadowView.layer.shadowColor = self.secondaryColor.CGColor;
+  if(self.modal.isEclipseEnabled) {    
+    self.scrollView.layer.borderColor = self.modal.secondaryColor.CGColor;
+
+    self.previewColor.layer.borderColor = self.modal.secondaryColor.CGColor;
     
-    self.contentView.layer.backgroundColor = self.primaryColor.CGColor;
-    self.scrollView.layer.borderColor = self.secondaryColor.CGColor;
-    
-    self.closeButton.backgroundColor = self.secondaryColor;
-    [self.closeButton setTitleColor:self.secondaryTextColor forState:UIControlStateNormal];
-    [self.closeButton setTitleColor:[self.secondaryTextColor colorWithAlphaComponent:0.6f] forState:UIControlStateHighlighted];
-    
-    self.selectButton.backgroundColor = self.secondaryColor;
-    [self.selectButton setTitleColor:self.secondaryTextColor forState:UIControlStateNormal];
-    [self.selectButton setTitleColor:[self.secondaryTextColor colorWithAlphaComponent:0.6f] forState:UIControlStateHighlighted];
-    
-    self.previewColor.layer.borderColor = self.secondaryColor.CGColor;
-    
-    self.hexTextField.backgroundColor = self.secondaryColor;
-    self.hexTextField.textColor = self.secondaryTextColor;
-    [[UITextField appearance] setTintColor:self.secondaryTextColor];
-    self.canEditMessage.textColor = self.secondaryTextColor;
-    self.canEditMessageBorder.borderColor = self.secondaryTextColor.CGColor;
+    self.hexTextField.backgroundColor = self.modal.secondaryColor;
+    self.hexTextField.textColor = self.modal.secondaryTextColor;
+    [[UITextField appearance] setTintColor:self.modal.secondaryTextColor];
+    self.canEditMessage.textColor = self.modal.secondaryTextColor;
+    self.canEditMessageBorder.borderColor = self.modal.secondaryTextColor.CGColor;
   } else if(self.lightUI) {
-    self.shadowView.layer.shadowColor = self.secondaryColor.CGColor;
+    self.scrollView.layer.borderColor = self.modal.secondaryColor.CGColor;
+
+    self.previewColor.layer.borderColor = self.modal.secondaryColor.CGColor;
     
-    self.contentView.layer.backgroundColor = self.primaryColor.CGColor;
-    self.scrollView.layer.borderColor = self.secondaryColor.CGColor;
-    
-    self.closeButton.backgroundColor = self.secondaryColor;
-    [self.closeButton setTitleColor:self.secondaryTextColor forState:UIControlStateNormal];
-    [self.closeButton setTitleColor:[self.secondaryTextColor colorWithAlphaComponent:0.6f] forState:UIControlStateHighlighted];
-    
-    self.selectButton.backgroundColor = self.secondaryColor;
-    [self.selectButton setTitleColor:self.secondaryTextColor forState:UIControlStateNormal];
-    [self.selectButton setTitleColor:[self.secondaryTextColor colorWithAlphaComponent:0.6f] forState:UIControlStateHighlighted];
-    
-    self.previewColor.layer.borderColor = self.secondaryColor.CGColor;
-    
-    self.hexTextField.backgroundColor = self.secondaryColor;
-    self.hexTextField.textColor = self.secondaryTextColor;
-    [[UITextField appearance] setTintColor:self.secondaryTextColor];
-    self.canEditMessage.textColor = self.secondaryTextColor;
-    self.canEditMessageBorder.borderColor = self.secondaryTextColor.CGColor;
+    self.hexTextField.backgroundColor = self.modal.secondaryColor;
+    self.hexTextField.textColor = self.modal.secondaryTextColor;
+    [[UITextField appearance] setTintColor:self.modal.secondaryTextColor];
+    self.canEditMessage.textColor = self.modal.secondaryTextColor;
+    self.canEditMessageBorder.borderColor = self.modal.secondaryTextColor.CGColor;
   } else {
-    self.shadowView.layer.shadowColor = self.primaryColor.CGColor;
+    self.scrollView.layer.borderColor = self.modal.primaryColor.CGColor;
+
+    self.previewColor.layer.borderColor = self.modal.primaryColor.CGColor;
     
-    self.contentView.layer.backgroundColor = self.secondaryColor.CGColor;
-    self.scrollView.layer.borderColor = self.primaryColor.CGColor;
-    
-    self.closeButton.backgroundColor = self.primaryColor;
-    [self.closeButton setTitleColor:self.primaryTextColor forState:UIControlStateNormal];
-    [self.closeButton setTitleColor:[self.primaryTextColor colorWithAlphaComponent:0.6f] forState:UIControlStateHighlighted];
-    
-    self.selectButton.backgroundColor = self.primaryColor;
-    [self.selectButton setTitleColor:self.primaryTextColor forState:UIControlStateNormal];
-    [self.selectButton setTitleColor:[self.primaryTextColor colorWithAlphaComponent:0.6f] forState:UIControlStateHighlighted];
-    
-    self.previewColor.layer.borderColor = self.primaryColor.CGColor;
-    
-    self.hexTextField.backgroundColor = self.primaryColor;
-    self.hexTextField.textColor = self.primaryTextColor;
-    [[UITextField appearance] setTintColor:self.primaryTextColor];
-    self.canEditMessage.textColor = self.primaryTextColor;
-    self.canEditMessageBorder.borderColor = self.primaryTextColor.CGColor;
+    self.hexTextField.backgroundColor = self.modal.primaryColor;
+    self.hexTextField.textColor = self.modal.primaryTextColor;
+    [[UITextField appearance] setTintColor:self.modal.primaryTextColor];
+    self.canEditMessage.textColor = self.modal.primaryTextColor;
+    self.canEditMessageBorder.borderColor = self.modal.primaryTextColor.CGColor;
   }
 }
 
@@ -362,7 +244,7 @@
       }
     }
   }
-
+  
   if (string.length == 0 && range.length == 1) {
     return YES;
   }

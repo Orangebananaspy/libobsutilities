@@ -11,6 +11,13 @@
 #ifndef OBSUtilities_h
 #define OBSUtilities_h
 
+typedef enum Edge : NSUInteger {
+  kTop,
+  kLeft,
+  kRight,
+  kBottom
+} Edge;
+
 @interface OBSUtilities : NSObject
 /*
  Gets the average color from the given image. It draws the entire image in a 1x1 pixel with
@@ -48,6 +55,27 @@
  background is dark or bright so you can have adaptive colored text.
  */
 + (BOOL)isColorBright:(UIColor *)color;
+
+/*
+ Inverses the given color. It is useful mostly to inverse a text color so it can adapt to various
+ colored background.
+ */
++ (UIColor *)inverseColor:(UIColor *)color;
+
+/*
+ It returns a dictionary with Background, Primary, or Secondary colors for the given image.
+ Format of dicionary {@"Background" : UIColor, @"Primary" : UIColor, @"Secondary" : UIColor}
+ 
+ Please note that the edge will be the background color, it simply determines the key side
+ of the image you actually care about and very useful for instances where if a badge is placed
+ on the top side of the image, then you care more about the top edge
+ */
++ (NSDictionary *)colorsFromImage:(UIImage *)image withEdge:(Edge)edge;
+
+/*
+ Check if the two given colors are similar by the given tolerance.
+ */
++ (BOOL)isColor:(UIColor *)aColor similarToColor:(UIColor *)bColor tolerance:(float)tolerance;
 
 /*
  Returns a 1x1 pixel UIImage with the given color.

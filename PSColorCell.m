@@ -5,8 +5,8 @@
 //  Copyright © 2018 Orangebananaspy. All rights reserved.
 //
 
-#import "PSColorCell.h"
-#import "OBSUtilities.h"
+#import "OBSUtilities/PSColorCell.h"
+#import "OBSUtilities/OBSUtilities.h"
 
 #define tweakPreferencePath @"/var/mobile/Library/Preferences/"
 

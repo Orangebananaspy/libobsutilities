@@ -5,7 +5,7 @@
 //  Copyright © 2018 Orangebananaspy. All rights reserved.
 //
 
-#import "PSTweakSettings.h"
+#import "OBSUtilities/PSTweakSettings.h"
 
 #define tweakPreferencePath @"/var/mobile/Library/Preferences/"
 
