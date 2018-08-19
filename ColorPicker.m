@@ -10,6 +10,8 @@
 #import "OBSUtilities/OBSUtilities.h"
 #import "OBSUtilities/OBSModalView.h"
 
+#define ResourcePath @"/var/mobile/Library/Preferences/OBSUtilities"
+
 @interface ColorPicker () <OBSModalDelegate>
 @property (nonatomic, strong) OBSModalView *modal;
 
@@ -21,10 +23,15 @@
 @property (nonatomic, strong) UITextField *hexTextField;
 @property (nonatomic, strong) UILabel *canEditMessage;
 @property (nonatomic) CALayer *canEditMessageBorder;
+@property (nonatomic, strong) UIView *duplicatePasteView;
+@property (nonatomic, strong) UIButton *duplicateButton;
+@property (nonatomic, strong) UIButton *pasteButton;
 @property (nonatomic, strong) ColorSlider *redSlider;
 @property (nonatomic, strong) ColorSlider *greenSlider;
 @property (nonatomic, strong) ColorSlider *blueSlider;
 @property (nonatomic, strong) ColorSlider *alphaSlider;
+@property (nonatomic, strong) UIImage *duplicateButtonImage;
+@property (nonatomic, strong) UIImage *pasteButtonImage;
 @end
 
 @implementation ColorPicker
@@ -46,6 +53,21 @@
   [self setupConstraints];
   [self applyColor];
   [self updateToColor:[OBSUtilities colorFromHexString:@"#000000"]];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+  [super viewDidAppear:animated];
+  
+  // hide modal view so we can spring it in
+  self.modal.frame = CGRectOffset(self.modal.frame, 0, self.view.frame.size.height);
+  
+  // show modal view with spring animation
+  [UIView animateWithDuration:0.5f delay:0 usingSpringWithDamping:0.6f initialSpringVelocity:0 options:UIViewAnimationOptionCurveLinear animations:^{
+    self.modal.frame = CGRectOffset(self.modal.frame, 0, -self.view.frame.size.height);
+  } completion:^(BOOL finished) {
+    if(finished) {
+    }
+  }];
 }
 
 - (void)viewDidLayoutSubviews {
@@ -120,6 +142,33 @@
   [self.canEditMessage.layer addSublayer:self.canEditMessageBorder];
   self.hexTextField.leftView = self.canEditMessage;
   self.hexTextField.leftViewMode = UITextFieldViewModeAlways;
+
+  self.duplicatePasteView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 40)];
+  self.duplicatePasteView.clipsToBounds = YES;
+  self.duplicatePasteView.layer.masksToBounds = YES;
+
+  CGSize imageScale = CGSizeMake(20, 20);
+  self.duplicateButtonImage = [OBSUtilities newScale:imageScale forImage:[self copyImage]];
+  self.pasteButtonImage = [OBSUtilities newScale:imageScale forImage:[self pasteImage]];
+  
+  self.duplicateButton = [UIButton buttonWithType:UIButtonTypeSystem];
+  self.duplicateButton.frame = CGRectMake(0, 0, 30, 40);
+  [self.duplicateButton setImage:self.duplicateButtonImage forState:UIControlStateNormal];
+  [self.duplicateButton.imageView setContentMode:UIViewContentModeScaleAspectFit];
+  self.duplicateButton.adjustsImageWhenHighlighted = YES;
+  [self.duplicateButton addTarget:self action:@selector(copyColor) forControlEvents:UIControlEventTouchUpInside];
+  
+  self.pasteButton = [UIButton buttonWithType:UIButtonTypeSystem];
+  self.pasteButton.frame = CGRectMake(30, 0, 30, 40);
+  [self.pasteButton setImage:self.pasteButtonImage forState:UIControlStateNormal];
+  [self.pasteButton.imageView setContentMode:UIViewContentModeScaleAspectFit];
+  self.pasteButton.adjustsImageWhenHighlighted = YES;
+  [self.pasteButton addTarget:self action:@selector(pasteColor) forControlEvents:UIControlEventTouchUpInside];
+  
+  [self.duplicatePasteView addSubview:self.duplicateButton];
+  [self.duplicatePasteView addSubview:self.pasteButton];
+  self.hexTextField.rightView = self.duplicatePasteView;
+  self.hexTextField.rightViewMode = UITextFieldViewModeAlways;
   
   self.redSlider = [[ColorSlider alloc] initWithFrame:CGRectMake(0, 0, self.mainRect.size.width - (15.0f * 4.0f), 20) withType:kRed];
   [self.redSlider minMaxOfColor:[OBSUtilities colorFromHexString:@"595457"]];
@@ -190,6 +239,9 @@
     [[UITextField appearance] setTintColor:self.modal.secondaryTextColor];
     self.canEditMessage.textColor = self.modal.secondaryTextColor;
     self.canEditMessageBorder.borderColor = self.modal.secondaryTextColor.CGColor;
+    
+    self.duplicateButtonImage = [OBSUtilities newColor:self.modal.secondaryTextColor forImage:self.duplicateButtonImage];
+    self.pasteButtonImage = [OBSUtilities newColor:self.modal.secondaryTextColor forImage:self.pasteButtonImage];
   } else if(self.lightUI) {
     self.scrollView.layer.borderColor = self.modal.secondaryColor.CGColor;
 
@@ -200,6 +252,9 @@
     [[UITextField appearance] setTintColor:self.modal.secondaryTextColor];
     self.canEditMessage.textColor = self.modal.secondaryTextColor;
     self.canEditMessageBorder.borderColor = self.modal.secondaryTextColor.CGColor;
+    
+    self.duplicateButtonImage = [OBSUtilities newColor:self.modal.secondaryTextColor forImage:self.duplicateButtonImage];
+    self.pasteButtonImage = [OBSUtilities newColor:self.modal.secondaryTextColor forImage:self.pasteButtonImage];
   } else {
     self.scrollView.layer.borderColor = self.modal.primaryColor.CGColor;
 
@@ -210,7 +265,13 @@
     [[UITextField appearance] setTintColor:self.modal.primaryTextColor];
     self.canEditMessage.textColor = self.modal.primaryTextColor;
     self.canEditMessageBorder.borderColor = self.modal.primaryTextColor.CGColor;
+    
+    self.duplicateButtonImage = [OBSUtilities newColor:self.modal.primaryTextColor forImage:self.duplicateButtonImage];
+    self.pasteButtonImage = [OBSUtilities newColor:self.modal.primaryTextColor forImage:self.pasteButtonImage];
   }
+  
+  [self.duplicateButton setImage:self.duplicateButtonImage forState:UIControlStateNormal];
+  [self.pasteButton setImage:self.pasteButtonImage forState:UIControlStateNormal];
 }
 
 #pragma mark COLOR MODIFIERS
@@ -235,13 +296,17 @@
 
 #pragma mark TEXTFIELD DELEGATE FUNCTIONS
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
-  if (textField.text.length < 9) {
+  if(textField.text.length + string.length > 9) {
+    [self shakeWrong];
+  } else {
     if([OBSUtilities isValidHexColorLetter:string]) {
-      if (textField.text.length == 0 && ![string isEqual:@"#"]) {
+      if (textField.text.length == 0 && [string characterAtIndex:0] != '#') {
         textField.text = [NSString stringWithFormat:@"#%@", [string uppercaseString]];
       } else {
         textField.text = [textField.text stringByAppendingString:[string uppercaseString]];
       }
+    } else {
+      [self shakeWrong];
     }
   }
   
@@ -253,10 +318,26 @@
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-  UIColor *color = [OBSUtilities colorFromHexString:self.hexTextField.text];
-  [self updateToColor:color];
+  if([OBSUtilities isValidHexColorString:textField.text]) {
+    UIColor *color = [OBSUtilities colorFromHexString:self.hexTextField.text];
+    [self updateToColor:color];
+  } else {
+    [self shakeWrong];
+  }
+  
   [textField resignFirstResponder];
   return YES;
+}
+
+- (void)shakeWrong {
+  static const float offsetValue = 20.0f;
+  CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"position"];
+  [animation setDuration:0.05];
+  [animation setRepeatCount:2];
+  [animation setAutoreverses:YES];
+  [animation setFromValue:[NSValue valueWithCGPoint:CGPointMake([self.modal center].x - offsetValue, [self.modal center].y)]];
+  [animation setToValue:[NSValue valueWithCGPoint:CGPointMake([self.modal center].x + offsetValue, [self.modal center].y)]];
+  [[self.modal layer] addAnimation:animation forKey:@"position"];
 }
 
 #pragma mark PICKER EXIT FUNCTIONS
@@ -276,5 +357,34 @@
 
 - (void)didReceiveMemoryWarning {
   [super didReceiveMemoryWarning];
+}
+
+#pragma mark LOAD IMAGE FUNCTIONS
+- (UIImage *)pasteImage {
+  NSData *data = [NSData dataWithContentsOfFile:[ResourcePath stringByAppendingString:@"/paste.png"]];
+  return data ? [UIImage imageWithData:data] : [UIImage imageNamed:@"paste"];
+}
+
+- (UIImage *)copyImage {
+  NSData *data = [NSData dataWithContentsOfFile:[ResourcePath stringByAppendingString:@"/copy.png"]];
+  return data ? [UIImage imageWithData:data] : [UIImage imageNamed:@"copy"];
+}
+
+#pragma mark COPY AND PASTE FUNCTIONS
+- (void)copyColor {
+  if([OBSUtilities isValidHexColorString:self.hexTextField.text]) {
+    [[UIPasteboard generalPasteboard] setString:self.hexTextField.text];
+  } else {
+    [self shakeWrong];
+  }
+}
+
+- (void)pasteColor {
+  NSString *possibleHex = [[UIPasteboard generalPasteboard] string];
+  if([OBSUtilities isValidHexColorString:possibleHex]) {
+    [self updateToColor:[OBSUtilities colorFromHexString:possibleHex]];
+  } else {
+    [self shakeWrong];
+  }
 }
 @end

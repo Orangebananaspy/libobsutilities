@@ -111,7 +111,7 @@
     [[UIDevice currentDevice] setValue:@(UIInterfaceOrientationPortrait) forKey:@"orientation"];
     [UINavigationController attemptRotationToDeviceOrientation];
     UIViewController *controller = [UIApplication sharedApplication].keyWindow.rootViewController;
-    [controller presentViewController:self.pickerController animated:YES completion:nil];
+    [controller presentViewController:self.pickerController animated:NO completion:nil];
     [self.pickerController setInitialColor:self.color];
   }
 }

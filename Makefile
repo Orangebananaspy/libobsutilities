@@ -6,9 +6,9 @@ export THEOS_DEVICE_IP = 192.168.0.101
 
 THEOS_BUILD_DIR = Packages
 
-#PACKAGE_VERSION = 1.1
+PACKAGE_VERSION = 1.2
 
-#DEBUG = 0
+DEBUG = 0
 
 include $(THEOS)/makefiles/common.mk
 
