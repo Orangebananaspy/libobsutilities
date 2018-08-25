@@ -14,7 +14,7 @@ include $(THEOS)/makefiles/common.mk
 
 LIBRARY_NAME = libOBSUtilities
 libOBSUtilities_CFLAGS = -fobjc-arc
-libOBSUtilities_FILES = ColorPicker.m ColorSlider.m OBSUtilities.m PSColorCell.m PSCustomSwitchCell.m PSTweakSettings.m OBSModalView.m
+libOBSUtilities_FILES = ColorPicker.m ColorSlider.m OBSUtilities.m PSColorCell.m PSCustomSwitchCell.m PSTweakSettings.m OBSModalView.m TweakSettings.m
 libOBSUtilities_FRAMEWORKS = UIKit Foundation CoreGraphics Accelerate
 libOBSUtilities_PRIVATE_FRAMEWORKS = Preferences
 

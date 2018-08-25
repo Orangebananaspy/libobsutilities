@@ -8,7 +8,7 @@
 #import <UIKit/UIKit.h>
 #import "PSTableCell.h"
 #import "PSSpecifier.h"
-#import "PSTweakSettings.h"
+#import "TweakSettings.h"
 
 #ifndef PSCustomSwitchCell_h
 #define PSCustomSwitchCell_h

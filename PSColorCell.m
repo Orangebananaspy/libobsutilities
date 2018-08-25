@@ -11,7 +11,7 @@
 #define tweakPreferencePath @"/var/mobile/Library/Preferences/"
 
 @interface PSColorCell ()
-@property (nonatomic, weak) PSTweakSettings *settings;
+@property (nonatomic, weak) TweakSettings *settings;
 @property (nonatomic, strong) UIImageView *colorImageView;
 @property (nonatomic, strong) ColorPicker *pickerController;
 @property (nonatomic, strong, setter=setColorForCell:) UIColor *color;
@@ -25,7 +25,7 @@
   if (self) {
     self.selectionStyle = UITableViewCellSelectionStyleDefault;
     
-    self.settings = [PSTweakSettings instanceWithName:[specifier.properties[@"preferenceName"] copy] andUser:[specifier.properties[@"preferenceName"] copy]];
+    self.settings = [TweakSettings instanceWithFileName:[specifier.properties[@"preferenceName"] copy] andTweakID:[specifier.properties[@"preferenceName"] copy]];
     
     self.specifier = specifier;
     
@@ -33,7 +33,7 @@
     NSString *keyLabel = [specifier.properties[@"keyLabel"] copy];
     
     NSString *defaultColorHex;
-    if(!(defaultColorHex = [self.settings getSettingsForKey:keyValue])) {
+    if(!(defaultColorHex = [self.settings objectForKey:keyValue tweakID:specifier.properties[@"preferenceName"]])) {
       defaultColorHex = [specifier.properties[@"default"] copy];
     }
     
@@ -90,7 +90,7 @@
 
 - (void)saveSettingsWithValue:(NSString *)hexString {
   NSString *keyValue = [self.specifier.properties[@"key"] copy];
-  [self.settings updateSettingsForKey:keyValue andValue:hexString];
+  [self.settings setObject:hexString forKey:keyValue tweakID:self.specifier.properties[@"preferenceName"]];
 
   id notification = self.specifier.properties[@"PostNotification"];
   if([notification isKindOfClass:[NSArray class]]) {

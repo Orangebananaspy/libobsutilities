@@ -9,7 +9,7 @@
 #import "PSTableCell.h"
 #import "PSSpecifier.h"
 #import "ColorPicker.h"
-#import "PSTweakSettings.h"
+#import "TweakSettings.h"
 
 #ifndef PSColorCell_h
 #define PSColorCell_h

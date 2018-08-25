@@ -6,10 +6,12 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <sys/cdefs.h>
 
 #ifndef PSTweakSettings_h
 #define PSTweakSettings_h
 
+__deprecated_msg("'PSTweakSettings' is deprecated. Use TweakSettings instead")
 @interface PSTweakSettings : NSObject
 /*
  Creates a singleton instance of PSTweakSettings with the name of the plist file representing the settings of a tweak

@@ -11,7 +11,7 @@
 #define tweakPreferencePath @"/var/mobile/Library/Preferences/"
 
 @interface PSCustomSwitchCell ()
-@property (nonatomic, weak) PSTweakSettings *settings;
+@property (nonatomic, weak) TweakSettings *settings;
 @property (nonatomic, strong) UISwitch *cellSwitch;
 @property (nonatomic, strong) UIView *switchBackground;
 @property (nonatomic, strong) CAGradientLayer *switchGradientLayer;
@@ -24,7 +24,7 @@
   self = [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:reuseIdentifier specifier:specifier];
   
   if(self) {
-    self.settings = [PSTweakSettings instanceWithName:[specifier.properties[@"preferenceName"] copy] andUser:[specifier.properties[@"preferenceName"] copy]];
+    self.settings = [TweakSettings instanceWithFileName:[specifier.properties[@"preferenceName"] copy] andTweakID:[specifier.properties[@"preferenceName"] copy]];
     
     self.specifier = specifier;
     NSString *keyValue = [specifier.properties[@"key"] copy];
@@ -32,10 +32,10 @@
     NSString *keyDescription = [specifier.properties[@"description"] copy];
     
     bool defaultBool;
-    if(![self.settings getSettingsForKey:keyValue]) {
+    if(![self.settings objectForKey:keyValue tweakID:specifier.properties[@"preferenceName"]]) {
       defaultBool = [[specifier.properties[@"default"] copy] boolValue];
     } else {
-      defaultBool = [[self.settings getSettingsForKey:keyValue] boolValue];
+      defaultBool = [[self.settings objectForKey:keyValue tweakID:specifier.properties[@"preferenceName"]] boolValue];
     }
     
     self.textLabel.text = keyLabel;
@@ -133,7 +133,7 @@
 
 - (void)updatePreferences:(bool)status {
   NSString *keyValue = [self.specifier.properties[@"key"] copy];
-  [self.settings updateSettingsForKey:keyValue andValue:[NSNumber numberWithBool:status]];
+  [self.settings setObject:[NSNumber numberWithBool:status] forKey:keyValue tweakID:self.specifier.properties[@"preferenceName"]];
 }
 
 - (void)setBackgroundColor:(UIColor *)color {
