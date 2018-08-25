@@ -5,7 +5,7 @@
 //  Copyright © 2018 Orangebananaspy. All rights reserved.
 //
 
-#import "TweakSettings.h"
+#import "OBSUtilities/TweakSettings.h"
 
 #define tweakPreferencePath @"/var/mobile/Library/Preferences/"
 
@@ -14,6 +14,11 @@
 @property (nonatomic, strong) NSLock *cacheLock; /* This will make it thread safe */
 @end
 
+/*
+ TODO: Cleanup cache (possible techniques)
+  - remove dictionary after x seconds if not used
+  - rely on resprings to refresh the list of cache
+ */
 @implementation TweakSettings
 + (TweakSettings *)instanceWithFileName:(NSString *)plistName andTweakID:(NSString *)t_id; {
   static TweakSettings *instance = nil;
