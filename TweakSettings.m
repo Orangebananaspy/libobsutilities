@@ -86,6 +86,22 @@
   return value;
 }
 
+- (NSString *)stringForKey:(id)key tweakID:(NSString *)t_id {
+  return [self objectForKey:key tweakID:t_id];
+}
+
+- (BOOL)boolForKey:(id)key tweakID:(NSString *)t_id {
+  return [[self objectForKey:key tweakID:t_id] boolValue];
+}
+
+- (int)intForKey:(id)key tweakID:(NSString *)t_id {
+  return [[self objectForKey:key tweakID:t_id] intValue];
+}
+
+- (float)floatForKey:(id)key tweakID:(NSString *)t_id {
+  return [[self objectForKey:key tweakID:t_id] floatValue];
+}
+
 - (void)setObject:(id)object forKey:(id)key tweakID:(NSString *)t_id {
   // acquire cache lock
   [self.cacheLock lock];

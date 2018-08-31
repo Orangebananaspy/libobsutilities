@@ -27,6 +27,26 @@
 - (id)objectForKey:(id)key tweakID:(NSString *)t_id;
 
 /*
+ Get the object for the key as a string with the user name.
+ */
+- (NSString *)stringForKey:(id)key tweakID:(NSString *)t_id;
+
+/*
+ Get the object for the key as a bool with the user name.
+ */
+- (BOOL)boolForKey:(id)key tweakID:(NSString *)t_id;
+
+/*
+ Get the object for the key as a int with the user name.
+ */
+- (int)intForKey:(id)key tweakID:(NSString *)t_id;
+
+/*
+ Get the object for the key as a float with the user name.
+ */
+- (float)floatForKey:(id)key tweakID:(NSString *)t_id;
+
+/*
  Update or Set the object for the given key. If the given file name does not exist it will create it.
  */
 - (void)setObject:(id)object forKey:(id)key tweakID:(NSString *)t_id;
