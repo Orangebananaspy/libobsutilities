@@ -6,6 +6,7 @@
 //
 
 #import "OBSUtilities/TweakSettings.h"
+#import "OBSUtilities/OBSUtilities.h"
 
 #define tweakPreferencePath @"/var/mobile/Library/Preferences/"
 
@@ -55,7 +56,7 @@
       // create the user dictionary with setup [user = [[settings = tweak settings], [plistpath = the path to the file]]]
       NSMutableDictionary *settings = [NSMutableDictionary dictionary];
       [settings setValue:tweakSettings forKey:@"settings"];
-      [settings setValue:plistName forKey:@"plistpath"];
+      [settings setValue:plistPath forKey:@"plistpath"];
       
       [instance.settingsCache setValue:settings forKey:t_id];
     }
@@ -100,6 +101,10 @@
 
 - (float)floatForKey:(id)key tweakID:(NSString *)t_id {
   return [[self objectForKey:key tweakID:t_id] floatValue];
+}
+
+- (UIColor *)colorForKey:(id)key tweakID:(NSString *)t_id {
+  return [OBSUtilities colorFromHexString:[self objectForKey:key tweakID:t_id]];
 }
 
 - (void)setObject:(id)object forKey:(id)key tweakID:(NSString *)t_id {

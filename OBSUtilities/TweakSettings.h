@@ -6,6 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 #ifndef TweakSettings_h
 #define TweakSettings_h
@@ -45,6 +46,11 @@
  Get the object for the key as a float with the user name.
  */
 - (float)floatForKey:(id)key tweakID:(NSString *)t_id;
+
+/*
+ Get the object for the key as a color with the user name.
+ */
+- (UIColor *)colorForKey:(id)key tweakID:(NSString *)t_id;
 
 /*
  Update or Set the object for the given key. If the given file name does not exist it will create it.
