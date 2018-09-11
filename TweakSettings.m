@@ -87,26 +87,6 @@
   return value;
 }
 
-- (NSString *)stringForKey:(id)key tweakID:(NSString *)t_id {
-  return [self objectForKey:key tweakID:t_id];
-}
-
-- (BOOL)boolForKey:(id)key tweakID:(NSString *)t_id {
-  return [[self objectForKey:key tweakID:t_id] boolValue];
-}
-
-- (int)intForKey:(id)key tweakID:(NSString *)t_id {
-  return [[self objectForKey:key tweakID:t_id] intValue];
-}
-
-- (float)floatForKey:(id)key tweakID:(NSString *)t_id {
-  return [[self objectForKey:key tweakID:t_id] floatValue];
-}
-
-- (UIColor *)colorForKey:(id)key tweakID:(NSString *)t_id {
-  return [OBSUtilities colorFromHexString:[self objectForKey:key tweakID:t_id]];
-}
-
 - (void)setObject:(id)object forKey:(id)key tweakID:(NSString *)t_id {
   // acquire cache lock
   [self.cacheLock lock];
@@ -124,4 +104,34 @@
   // release cache lock
   [self.cacheLock unlock];
 }
+
+// returns nil if no value found
+- (NSString *)stringForKey:(id)key tweakID:(NSString *)t_id {
+  return [self objectForKey:key tweakID:t_id];
+}
+
+// returns false if no value for key exists
+- (BOOL)boolForKey:(id)key tweakID:(NSString *)t_id {
+  id value = [self objectForKey:key tweakID:t_id];
+  return value != nil ? [value boolValue] : false;
+}
+
+// returns max int if no value for key exists
+- (int)intForKey:(id)key tweakID:(NSString *)t_id {
+  id value = [self objectForKey:key tweakID:t_id];
+  return value != nil ? [value intValue] : INT_MAX;
+}
+
+// returns max float if no value for key exists
+- (float)floatForKey:(id)key tweakID:(NSString *)t_id {
+  id value = [self objectForKey:key tweakID:t_id];
+  return value != nil ? [value floatValue] : FLT_MAX;
+}
+
+// returns nil if no value for key exists
+- (UIColor *)colorForKey:(id)key tweakID:(NSString *)t_id {
+  id value = [self objectForKey:key tweakID:t_id];
+  return value != nil ? [OBSUtilities colorFromHexString:value] : nil;
+}
+
 @end
