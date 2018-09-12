@@ -35,6 +35,12 @@
 @property (nonatomic, strong, readonly) UIView *contentView;
 
 /*
+ Extra top view beside the close button
+ */
+@property (nonatomic, strong, readonly) UIView *topView;
+
+
+/*
  If eclipse has been enabled for the settings app
  */
 @property (nonatomic, assign, readonly) BOOL isEclipseEnabled;

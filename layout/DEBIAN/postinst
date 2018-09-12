@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# fix permissions
+chown -R mobile:mobile /var/mobile/Library/Preferences/OBSUtilities
+chmod -R 0755 /var/mobile/Library/Preferences/OBSUtilities
+
+exit 0

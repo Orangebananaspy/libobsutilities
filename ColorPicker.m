@@ -9,10 +9,16 @@
 #import "OBSUtilities/ColorSlider.h"
 #import "OBSUtilities/OBSUtilities.h"
 #import "OBSUtilities/OBSModalView.h"
+#import <dlfcn.h>
 
 #define ResourcePath @"/var/mobile/Library/Preferences/OBSUtilities"
+//#define ResourceRecentColorPath @"/Users/rutvik/Desktop/tweak/libobsutilities/layout/var/mobile/Library/Preferences/OBSUtilities/recent_colors.plist"
+#define ResourceRecentColorPath @"/var/mobile/Library/Preferences/OBSUtilities/recent_colors.plist"
+#define RecentCellIdentifier @"RecentColorCell"
+#define NUM_RECENT_CELL ((int) 6)
+#define RECENT_CELL_SIZE ((CGSize) {30.0f, 30.0f})
 
-@interface ColorPicker () <OBSModalDelegate>
+@interface ColorPicker () <OBSModalDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout>
 @property (nonatomic, strong) OBSModalView *modal;
 
 @property (nonatomic) CGRect mainRect;
@@ -32,15 +38,35 @@
 @property (nonatomic, strong) ColorSlider *alphaSlider;
 @property (nonatomic, strong) UIImage *duplicateButtonImage;
 @property (nonatomic, strong) UIImage *pasteButtonImage;
+
+@property (nonatomic, strong) UICollectionView *recentCollectionView;
+@property (nonatomic, strong) NSMutableDictionary *recentColorDictionary;
+@property (nonatomic, strong) NSMutableArray *recentColors;
 @end
 
 @implementation ColorPicker
 - (ColorPicker *)init {
   self = [super init];
   if (self) {
+    // load library if not loaded (mainly needed for Cephie framework)
+    dlopen("/usr/lib/libOBSUtilities.dylib", RTLD_LAZY | RTLD_LOCAL);
+    
     self.lightUI = YES;
   }
   return self;
+}
+
+- (void)grabRecentColorData {
+  self.recentColorDictionary = [NSMutableDictionary dictionaryWithContentsOfFile:ResourceRecentColorPath];
+  if(!self.recentColorDictionary) {
+    self.recentColors = [@[@"#00000000", @"#00000000", @"#00000000", @"#00000000", @"#00000000", @"#00000000"] mutableCopy];
+    self.recentColorDictionary = [NSMutableDictionary dictionary];
+    [self.recentColorDictionary setObject:self.recentColors forKey:@"Colors"];
+  } else {
+    self.recentColors = self.recentColorDictionary[@"Colors"];
+  }
+  
+  [self.recentCollectionView reloadData];
 }
 
 - (void)viewDidLoad {
@@ -53,6 +79,7 @@
   [self setupConstraints];
   [self applyColor];
   [self updateToColor:[OBSUtilities colorFromHexString:@"#000000"]];
+  [self grabRecentColorData];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -91,16 +118,59 @@
 }
 
 #pragma mark SETUP FUNCTIONS
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+  return NUM_RECENT_CELL;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+  UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:RecentCellIdentifier forIndexPath:indexPath];
+  if(self.recentColors) {
+    UIColor *cellColor = [OBSUtilities colorFromHexString:[self.recentColors objectAtIndex:indexPath.row]];
+    cell.backgroundColor = cellColor;
+  }
+  cell.layer.cornerRadius = RECENT_CELL_SIZE.width / 2.0f;
+  return cell;
+}
+
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+  return RECENT_CELL_SIZE;
+}
+
+- (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(nonnull UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section {
+  NSInteger verticalInset = (self.modal.topView.frame.size.height - RECENT_CELL_SIZE.height) / 2.0f;
+  return UIEdgeInsetsMake(verticalInset, 5.5f, verticalInset, 5.5f);
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+  UIColor *selectedColor = [OBSUtilities colorFromHexString:[self.recentColors objectAtIndex:indexPath.row]];
+  [self updateToColor:selectedColor];
+}
+
 - (void)setupContentView {
   OBSModalOptions *options = [[OBSModalOptions alloc] initWithModalFrame:self.mainRect cornerRadius:self.mainCornerRadius delegate:self isLightUI:self.lightUI selectTitleForButton:@"SELECT"];
   self.modal = [[OBSModalView alloc] initWithFrame:self.view.frame modalOptions:options];
 }
 
 - (void)setupContentSubviews {
+  UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
+  layout.minimumInteritemSpacing = 2.5f;
+  
+  self.recentCollectionView = [[UICollectionView alloc] initWithFrame:self.modal.topView.frame collectionViewLayout:layout];
+  self.recentCollectionView.layer.masksToBounds = YES;
+  self.recentCollectionView.scrollEnabled = false;
+  self.recentCollectionView.layer.cornerRadius = self.modal.topView.layer.cornerRadius;
+  self.recentCollectionView.layer.borderWidth = 1.4f;
+  self.recentCollectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  [self.recentCollectionView setDataSource:self];
+  [self.recentCollectionView setDelegate:self];
+  [self.recentCollectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:RecentCellIdentifier];
+  self.recentCollectionView.backgroundColor = [UIColor clearColor];
+  self.modal.topView.backgroundColor = [UIColor clearColor];
+  
   self.scrollView = [[UIScrollView alloc] initWithFrame:self.modal.contentView.frame];
   self.scrollView.layer.masksToBounds = YES;
   self.scrollView.layer.cornerRadius = self.mainCornerRadius;
-  self.scrollView.layer.borderWidth = 1.5f;
+  self.scrollView.layer.borderWidth = 1.4f;
   self.scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   
   self.scrollViewStack = [[UIStackView alloc] init];
@@ -188,6 +258,14 @@
 }
 
 - (void)setupConstraints {
+  self.recentCollectionView.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.recentCollectionView.topAnchor constraintEqualToAnchor:(self.modal.topView.topAnchor)].active = YES;
+  CGFloat width = (NUM_RECENT_CELL * RECENT_CELL_SIZE.width) + (5.0f * (NUM_RECENT_CELL + 1));
+  [self.recentCollectionView.widthAnchor constraintEqualToConstant:width].active = YES;
+  [self.recentCollectionView.rightAnchor constraintEqualToAnchor:self.modal.topView.rightAnchor].active = YES;
+//  [self.recentCollectionView.centerXAnchor constraintEqualToAnchor:self.modal.topView.centerXAnchor].active = YES;
+  [self.recentCollectionView.centerYAnchor constraintEqualToAnchor:self.modal.topView.centerYAnchor].active = YES;
+  
   self.scrollViewStack.translatesAutoresizingMaskIntoConstraints = NO;
   [self.scrollViewStack.topAnchor constraintEqualToAnchor:(self.scrollView.topAnchor)].active = YES;
   [self.scrollViewStack.leadingAnchor constraintEqualToAnchor:(self.scrollView.leadingAnchor)].active = YES;
@@ -217,6 +295,7 @@
 #pragma mark ADD SUBVIEWS
 - (void)addViewsInOrder {
   [self.view insertSubview:self.modal atIndex:0];
+  [self.modal.topView addSubview:self.recentCollectionView];
   [self.modal.contentView addSubview:self.scrollView];
   [self.scrollView addSubview:self.scrollViewStack];
   [self.scrollViewStack addArrangedSubview:self.previewColor];
@@ -231,6 +310,7 @@
 - (void)applyColor {
   if(self.modal.isEclipseEnabled) {    
     self.scrollView.layer.borderColor = self.modal.secondaryColor.CGColor;
+    self.recentCollectionView.layer.borderColor = self.modal.secondaryColor.CGColor;
 
     self.previewColor.layer.borderColor = self.modal.secondaryColor.CGColor;
     
@@ -239,12 +319,10 @@
     [[UITextField appearance] setTintColor:self.modal.secondaryTextColor];
     self.canEditMessage.textColor = self.modal.secondaryTextColor;
     self.canEditMessageBorder.borderColor = self.modal.secondaryTextColor.CGColor;
-    
-    self.duplicateButtonImage = [OBSUtilities newColor:self.modal.secondaryTextColor forImage:self.duplicateButtonImage];
-    self.pasteButtonImage = [OBSUtilities newColor:self.modal.secondaryTextColor forImage:self.pasteButtonImage];
   } else if(self.lightUI) {
     self.scrollView.layer.borderColor = self.modal.secondaryColor.CGColor;
-
+    self.recentCollectionView.layer.borderColor = self.modal.secondaryColor.CGColor;
+    
     self.previewColor.layer.borderColor = self.modal.secondaryColor.CGColor;
     
     self.hexTextField.backgroundColor = self.modal.secondaryColor;
@@ -252,12 +330,10 @@
     [[UITextField appearance] setTintColor:self.modal.secondaryTextColor];
     self.canEditMessage.textColor = self.modal.secondaryTextColor;
     self.canEditMessageBorder.borderColor = self.modal.secondaryTextColor.CGColor;
-    
-    self.duplicateButtonImage = [OBSUtilities newColor:self.modal.secondaryTextColor forImage:self.duplicateButtonImage];
-    self.pasteButtonImage = [OBSUtilities newColor:self.modal.secondaryTextColor forImage:self.pasteButtonImage];
   } else {
     self.scrollView.layer.borderColor = self.modal.primaryColor.CGColor;
-
+    self.recentCollectionView.layer.borderColor = self.modal.primaryColor.CGColor;
+    
     self.previewColor.layer.borderColor = self.modal.primaryColor.CGColor;
     
     self.hexTextField.backgroundColor = self.modal.primaryColor;
@@ -265,18 +341,21 @@
     [[UITextField appearance] setTintColor:self.modal.primaryTextColor];
     self.canEditMessage.textColor = self.modal.primaryTextColor;
     self.canEditMessageBorder.borderColor = self.modal.primaryTextColor.CGColor;
-    
-    self.duplicateButtonImage = [OBSUtilities newColor:self.modal.primaryTextColor forImage:self.duplicateButtonImage];
-    self.pasteButtonImage = [OBSUtilities newColor:self.modal.primaryTextColor forImage:self.pasteButtonImage];
   }
   
+  self.duplicateButtonImage = [OBSUtilities newColor:self.hexTextField.textColor forImage:self.duplicateButtonImage];
+  self.pasteButtonImage = [OBSUtilities newColor:self.hexTextField.textColor forImage:self.pasteButtonImage];
+  
   [self.duplicateButton setImage:self.duplicateButtonImage forState:UIControlStateNormal];
+  self.duplicateButton.tintColor = self.hexTextField.textColor;
   [self.pasteButton setImage:self.pasteButtonImage forState:UIControlStateNormal];
+  self.pasteButton.tintColor = self.hexTextField.textColor;
 }
 
 #pragma mark COLOR MODIFIERS
 - (void)setInitialColor:(UIColor *)color {
   [self updateToColor:color];
+  [self grabRecentColorData];
 }
 
 - (void)updateToColor:(UIColor *)color {
@@ -345,6 +424,18 @@
   if (self.delegate) {
     if ([self.delegate respondsToSelector:@selector(colorPickerReturnedWithColor:andHexString:)]) {
       UIColor *color = [UIColor colorWithRed:self.redSlider.value green:self.greenSlider.value blue:self.blueSlider.value alpha:self.alphaSlider.value];
+      UIColor *lastRecentColor = [OBSUtilities colorFromHexString:self.recentColors.lastObject];
+      NSString *lastRecentColorHex = [OBSUtilities hexStringFromColor:lastRecentColor];
+      // if last recent color is not similar to the selected color than add it to the last spot in the recent color
+      if(![lastRecentColorHex isEqualToString:self.hexTextField.text]) {
+        [self.recentColors removeObjectAtIndex:0];
+        [self.recentColors addObject:self.hexTextField.text];
+      }
+      
+      // update Colors and save it to a file
+      [self.recentColorDictionary setObject:self.recentColors forKey:@"Colors"];
+      [self.recentColorDictionary writeToFile:ResourceRecentColorPath atomically:YES];
+      
       [self.delegate colorPickerReturnedWithColor:color andHexString:self.hexTextField.text];
     }
   }
@@ -361,13 +452,23 @@
 
 #pragma mark LOAD IMAGE FUNCTIONS
 - (UIImage *)pasteImage {
-  NSData *data = [NSData dataWithContentsOfFile:[ResourcePath stringByAppendingString:@"/paste.png"]];
-  return data ? [UIImage imageWithData:data] : [UIImage imageNamed:@"paste"];
+  static UIImage *pasteIMG = nil;
+  if(!pasteIMG) {
+    NSData *data = [NSData dataWithContentsOfFile:[ResourcePath stringByAppendingString:@"/paste.png"]];
+    pasteIMG = [data ? [UIImage imageWithData:data] : [UIImage imageNamed:@"paste"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+  }
+  
+  return pasteIMG;
 }
 
 - (UIImage *)copyImage {
-  NSData *data = [NSData dataWithContentsOfFile:[ResourcePath stringByAppendingString:@"/copy.png"]];
-  return data ? [UIImage imageWithData:data] : [UIImage imageNamed:@"copy"];
+  static UIImage *copyIMG = nil;
+  if(!copyIMG) {
+    NSData *data = [NSData dataWithContentsOfFile:[ResourcePath stringByAppendingString:@"/copy.png"]];
+    copyIMG = [data ? [UIImage imageWithData:data] : [UIImage imageNamed:@"copy"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+  }
+  
+  return copyIMG;
 }
 
 #pragma mark COPY AND PASTE FUNCTIONS

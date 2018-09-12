@@ -27,6 +27,7 @@
 @interface OBSModalView ()
 @property (nonatomic, strong) OBSModalOptions *modalOptions;
 @property (nonatomic, strong, readwrite) UIView *contentView;
+@property (nonatomic, strong, readwrite) UIView *topView;
 
 @property (nonatomic, strong, readwrite) UIColor *primaryColor;
 @property (nonatomic, strong, readwrite) UIColor *secondaryColor;
@@ -38,6 +39,8 @@
 @property (nonatomic, assign, readwrite) BOOL isEclipseEnabled;
 @property (nonatomic, strong) UIButton *closeButton;
 @property (nonatomic, strong) UIButton *selectButton;
+
+@property (nonatomic, strong) UIView *extraTopView;
 @end
 
 @implementation OBSModalView
@@ -58,7 +61,7 @@
         }
       }
     }
-    
+        
     // setup default values
     if(self.isEclipseEnabled) {
       self.primaryColor = [OBSUtilities colorFromHexString:@"212121"];
@@ -116,6 +119,17 @@
   self.selectButton.titleLabel.font = [UIFont fontWithName:[NSString stringWithFormat:@"%@-Bold", self.selectButton.titleLabel.font.fontName] size:14.0f];
   self.selectButton.layer.masksToBounds = YES;
   self.selectButton.layer.cornerRadius =  20.5f;
+  
+  self.extraTopView = [[UIView alloc] initWithFrame:CGRectZero];
+  self.extraTopView.layer.masksToBounds = YES;
+  self.extraTopView.clipsToBounds = YES;
+  self.extraTopView.layer.cornerRadius = 20.0f;
+  self.extraTopView.backgroundColor = [UIColor clearColor];
+  
+  self.topView = [[UIView alloc] initWithFrame:CGRectZero];
+  self.topView.layer.masksToBounds = YES;
+  self.topView.layer.cornerRadius = 20.0f;
+  self.topView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 }
 
 - (void)setupConstraints {
@@ -136,6 +150,12 @@
   [self.selectButton.widthAnchor constraintEqualToConstant:70.0f].active = YES;
   [self.selectButton.centerXAnchor constraintEqualToAnchor:self.panelView.centerXAnchor constant:0.0f].active = YES;
   [self.selectButton.topAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:15.0f].active = YES;
+  
+  self.extraTopView.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.extraTopView.leftAnchor constraintEqualToAnchor:self.panelView.leftAnchor constant:40.0f + (15.0f * 2)].active = YES;
+  [self.extraTopView.rightAnchor constraintEqualToAnchor:self.panelView.rightAnchor constant:-15.0f].active = YES;
+  [self.extraTopView.bottomAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:-15.0f].active = YES;
+  [self.extraTopView.heightAnchor constraintEqualToConstant:40.0f].active = YES;
 }
 
 - (void)applyColor {
@@ -187,5 +207,7 @@
   [self.panelView addSubview:self.contentView];
   [self.panelView addSubview:self.closeButton];
   [self.panelView addSubview:self.selectButton];
+  [self.panelView addSubview:self.extraTopView];
+  [self.extraTopView addSubview:self.topView];
 }
 @end
